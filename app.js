@@ -10,11 +10,14 @@
     d: 3, D: 3, g: 3, G: 3, г: 3, Г: 3
   };
 
+  const ASSET_V = window.SITE_VERSION || "";
+  const asset = (path) => path + "?v=" + encodeURIComponent(ASSET_V);
+
   const SCENES = [
-    { scene: 1, sceneLabel: "Сцена 1", webp: "images/scena-1.webp", jpg: "images/scena-1.jpg" },
-    { scene: 2, sceneLabel: "Сцена 2", webp: "images/scena-2.webp", jpg: "images/scena-2.jpg" },
-    { scene: 3, sceneLabel: "Сцена 3", webp: "images/scena-3.webp", jpg: "images/scena-3.jpg" },
-    { scene: 4, sceneLabel: "Сцена 4", webp: "images/scena-4.webp", jpg: "images/scena-4.jpg" }
+    { scene: 1, sceneLabel: "Сцена 1", webp: asset("images/scena-1.webp"), jpg: asset("images/scena-1.jpg") },
+    { scene: 2, sceneLabel: "Сцена 2", webp: asset("images/scena-2.webp"), jpg: asset("images/scena-2.jpg") },
+    { scene: 3, sceneLabel: "Сцена 3", webp: asset("images/scena-3.webp"), jpg: asset("images/scena-3.jpg") },
+    { scene: 4, sceneLabel: "Сцена 4", webp: asset("images/scena-4.webp"), jpg: asset("images/scena-4.jpg") }
   ];
 
   const els = {
