@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="color-scheme" content="dark">
   <title>Курс ветроходство — Тест</title>
-  <link rel="stylesheet" href="fonts.css?v=20261126210638">
-  <link rel="stylesheet" href="styles.css?v=20261126210638">
+  <link rel="stylesheet" href="fonts.css?v=20261126212317">
+  <link rel="stylesheet" href="styles.css?v=20261126212317">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%0707111f' stroke='%23f0c75e' stroke-width='3'/%3E%3Cpath d='M32 8 L36 32 L32 56 L28 32 Z M8 32 L32 28 L56 32 L32 36 Z' fill='%23f0c75e'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23fff'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -85,7 +85,7 @@
       <h1 class="start-title">Курс ветроходство</h1>
       <p class="start-lead">12 въпроса от изпитния материал — КТК и Наредба № 6. Един въпрос наведнъж, с кратко обяснение след всеки отговор.</p>
       <button type="button" class="btn primary" id="start-btn">Започни теста</button>
-      <p class="start-keys">Клавиши: 1–4 или А Б В Г &nbsp;·&nbsp; Enter / интервал / → напред &nbsp;·&nbsp; F цял екран</p>
+      <p class="start-keys">Клавиши: ← назад &nbsp;·&nbsp; ← назад &nbsp;·&nbsp; 1–4 или А Б В Г &nbsp;·&nbsp; Enter / интервал / → напред &nbsp;·&nbsp; F цял екран</p>
     </section>
 
     <section id="comic-view" class="panel comic-view" hidden>
@@ -99,6 +99,7 @@
         </picture>
       </div>
       <div class="comic-actions">
+        <button type="button" class="btn ghost" id="comic-back-btn">Назад</button>
         <button type="button" class="btn primary" id="to-questions-btn">Към въпросите</button>
       </div>
     </section>
@@ -110,6 +111,9 @@
       </div>
       <h2 class="question" id="question-text"></h2>
       <div class="answers" id="answers" role="group" aria-label="Отговори"></div>
+      <div class="quiz-nav">
+        <button type="button" class="btn ghost" id="quiz-back-btn">Назад</button>
+      </div>
       <div class="explain" id="explain" hidden>
         <div class="explain-body">
           <p class="explain-kicker" id="explain-kicker"></p>
@@ -132,11 +136,11 @@
     </section>
   </main>
 
-  <p class="kbd-hint" id="kbd-hint">1–4 или А Б В Г &nbsp;·&nbsp; Enter / интервал / → напред &nbsp;·&nbsp; F цял екран</p>
+  <p class="kbd-hint" id="kbd-hint">← назад &nbsp;·&nbsp; 1–4 или А Б В Г &nbsp;·&nbsp; Enter / интервал / → напред &nbsp;·&nbsp; F цял екран</p>
 
-  <script>window.SITE_VERSION = "20261126210638";</script>
-  <script src="questions.js?v=20261126210638"></script>
-  <script src="app.js?v=20261126210638"></script>
+  <script>window.SITE_VERSION = "20261126212317";</script>
+  <script src="questions.js?v=20261126212317"></script>
+  <script src="app.js?v=20261126212317"></script>
   <script>
     (function () {
       var embedded = window.SITE_VERSION;

@@ -48,7 +48,9 @@
     comicChip: document.getElementById("comic-chip"),
     comicSource: document.getElementById("comic-source"),
     comicImg: document.getElementById("comic-img"),
-    toQuestionsBtn: document.getElementById("to-questions-btn")
+    toQuestionsBtn: document.getElementById("to-questions-btn"),
+    comicBackBtn: document.getElementById("comic-back-btn"),
+    quizBackBtn: document.getElementById("quiz-back-btn")
   };
 
   const state = {
@@ -58,7 +60,10 @@
     locked: false,
     missed: [],
     shuffled: [],
-    mode: "all" // "all" | "retry"
+    mode: "all",
+    slides: [],
+    slide: 0,
+    recorded: {}
   };
 
   function shuffle(arr) {
@@ -70,12 +75,29 @@
     return a;
   }
 
+  function buildSlides(queue, mode) {
+    if (mode === "retry") {
+      return queue.map((_, i) => ({ type: "question", qIndex: i }));
+    }
+    const slides = [];
+    let lastScene = null;
+    queue.forEach((q, i) => {
+      if (q.scene !== lastScene) {
+        slides.push({ type: "comic", scene: q.scene });
+        lastScene = q.scene;
+      }
+      slides.push({ type: "question", qIndex: i });
+    });
+    return slides;
+  }
+
   function show(view) {
     els.startView.hidden = view !== "start";
     els.comicView.hidden = view !== "comic";
     els.quizView.hidden = view !== "quiz";
     els.endView.hidden = view !== "end";
     els.hud.hidden = view !== "quiz" && view !== "comic";
+    document.body.classList.toggle("showing-comic", view === "comic");
   }
 
   function start(queue, mode) {
@@ -85,17 +107,19 @@
     state.locked = false;
     state.missed = [];
     state.mode = mode;
+    state.recorded = {};
+    state.slides = buildSlides(state.queue, mode);
+    state.slide = 0;
     els.scoreValue.textContent = "0";
-    if (mode === "all" && state.queue.length) {
-      showComic(state.queue[0].scene);
-    } else {
-      show("quiz");
-      renderQuestion();
-    }
+    renderSlide();
   }
 
   function currentQuestion() {
     return state.queue[state.index];
+  }
+
+  function currentSlide() {
+    return state.slides[state.slide];
   }
 
   function updateProgress(beforeAnswer) {
@@ -105,12 +129,37 @@
     els.barFill.style.width = ((done / total) * 100) + "%";
   }
 
+  function updateBackButtons() {
+    const atStart = state.slide <= 0;
+    if (els.comicBackBtn) els.comicBackBtn.hidden = atStart;
+    if (els.quizBackBtn) els.quizBackBtn.hidden = atStart;
+  }
+
+  function renderSlide() {
+    const s = currentSlide();
+    if (!s) {
+      showEnd();
+      return;
+    }
+    if (s.type === "comic") {
+      showComic(s.scene);
+    } else {
+      state.index = s.qIndex;
+      show("quiz");
+      renderQuestion();
+    }
+    updateBackButtons();
+  }
+
   function showComic(sceneNum) {
     const scene = SCENES.find((s) => s.scene === sceneNum);
     if (!scene) {
-      show("quiz");
-      renderQuestion();
+      goForward();
       return;
+    }
+    const firstQ = state.queue.find((q) => q.scene === sceneNum);
+    if (firstQ) {
+      state.index = state.queue.indexOf(firstQ);
     }
     els.comicChip.textContent = scene.sceneLabel;
     els.comicSource.srcset = scene.webp;
@@ -121,26 +170,26 @@
     els.toQuestionsBtn.focus();
   }
 
-  function goToQuestions() {
-    show("quiz");
-    renderQuestion();
-  }
-
   function renderQuestion() {
     const q = currentQuestion();
-    state.locked = false;
-    state.shuffled = shuffle(q.answers);
+    const saved = state.recorded[q.id];
 
     els.sceneChip.textContent = q.sceneLabel;
     els.examChip.textContent = "Въпрос " + q.examNumber;
     els.questionText.textContent = q.text;
+    updateProgress(!saved);
 
-    updateProgress(true);
-
-    els.explain.hidden = true;
     els.explain.classList.remove("is-yes", "is-no");
     els.answers.classList.remove("is-locked");
     els.answers.innerHTML = "";
+
+    if (saved) {
+      state.shuffled = saved.shuffled;
+      state.locked = true;
+    } else {
+      state.shuffled = shuffle(q.answers);
+      state.locked = false;
+    }
 
     state.shuffled.forEach((ans, i) => {
       const btn = document.createElement("button");
@@ -156,8 +205,37 @@
       els.answers.appendChild(btn);
     });
 
-    const isLast = state.index === state.queue.length - 1;
+    const isLast = state.slide === state.slides.length - 1;
     els.nextBtn.textContent = isLast ? "Резултат" : "Напред";
+
+    if (saved) {
+      paintAnswers(saved.pickedId, q.correct);
+      els.explain.classList.add(saved.correct ? "is-yes" : "is-no");
+      els.explainKicker.textContent = saved.correct ? "Вярно ✓" : "Грешно ✗";
+      els.explainText.textContent = q.explanation;
+      els.explain.hidden = false;
+      els.answers.classList.add("is-locked");
+      updateProgress(false);
+      els.nextBtn.focus();
+    } else {
+      els.explain.hidden = true;
+    }
+  }
+
+  function paintAnswers(pickedId, correctId) {
+    els.answers.querySelectorAll(".answer").forEach((btn, idx) => {
+      const ans = state.shuffled[idx];
+      const mark = btn.querySelector(".mark");
+      btn.classList.remove("is-correct", "is-wrong");
+      mark.textContent = "";
+      if (ans.id === correctId) {
+        btn.classList.add("is-correct");
+        mark.textContent = "✓";
+      } else if (ans.id === pickedId) {
+        btn.classList.add("is-wrong");
+        mark.textContent = "✗";
+      }
+    });
   }
 
   function choose(i) {
@@ -167,21 +245,9 @@
     if (!picked) return;
 
     state.locked = true;
-    els.answers.classList.add("is-locked");
-
     const correct = picked.id === q.correct;
-    const buttons = els.answers.querySelectorAll(".answer");
-    buttons.forEach((btn, idx) => {
-      const ans = state.shuffled[idx];
-      const mark = btn.querySelector(".mark");
-      if (ans.id === q.correct) {
-        btn.classList.add("is-correct");
-        mark.textContent = "✓";
-      } else if (idx === i) {
-        btn.classList.add("is-wrong");
-        mark.textContent = "✗";
-      }
-    });
+    paintAnswers(picked.id, q.correct);
+    els.answers.classList.add("is-locked");
 
     if (correct) {
       state.score += 1;
@@ -196,27 +262,34 @@
       els.explainKicker.textContent = "Грешно ✗";
     }
 
+    state.recorded[q.id] = {
+      pickedId: picked.id,
+      correct: correct,
+      shuffled: state.shuffled.slice()
+    };
+
     els.explainText.textContent = q.explanation;
     els.explain.hidden = false;
     updateProgress(false);
     els.nextBtn.focus();
   }
 
-  function next() {
-    if (!state.locked) return;
-    if (state.index < state.queue.length - 1) {
-      const current = currentQuestion();
-      state.index += 1;
-      const upcoming = currentQuestion();
-      if (state.mode === "all" && upcoming.scene !== current.scene) {
-        showComic(upcoming.scene);
-      } else {
-        show("quiz");
-        renderQuestion();
-      }
-    } else {
+  function goForward() {
+    const s = currentSlide();
+    if (!s) return;
+    if (s.type === "question" && !state.locked) return;
+    if (state.slide < state.slides.length - 1) {
+      state.slide += 1;
+      renderSlide();
+    } else if (s.type === "question" && state.locked) {
       showEnd();
     }
+  }
+
+  function goBack() {
+    if (state.slide <= 0) return;
+    state.slide -= 1;
+    renderSlide();
   }
 
   function showEnd() {
@@ -252,8 +325,10 @@
   }
 
   els.startBtn.addEventListener("click", () => start(QUESTIONS, "all"));
-  els.nextBtn.addEventListener("click", next);
-  els.toQuestionsBtn.addEventListener("click", goToQuestions);
+  els.nextBtn.addEventListener("click", goForward);
+  els.toQuestionsBtn.addEventListener("click", goForward);
+  els.comicBackBtn.addEventListener("click", goBack);
+  els.quizBackBtn.addEventListener("click", goBack);
   els.restartBtn.addEventListener("click", () => start(QUESTIONS, "all"));
   els.retryWrongBtn.addEventListener("click", () => {
     if (!state.missed.length) return;
@@ -286,21 +361,27 @@
       return;
     }
 
+    if (els.comicView.hidden && els.quizView.hidden) return;
+
+    if (key === "ArrowLeft") {
+      e.preventDefault();
+      goBack();
+      return;
+    }
+
     if (!els.comicView.hidden && (key === "Enter" || key === " " || key === "ArrowRight")) {
       e.preventDefault();
-      goToQuestions();
+      goForward();
       return;
     }
 
-    if (els.quizView.hidden) return;
-
-    if (state.locked && (key === "Enter" || key === " " || key === "ArrowRight")) {
+    if (!els.quizView.hidden && state.locked && (key === "Enter" || key === " " || key === "ArrowRight")) {
       e.preventDefault();
-      next();
+      goForward();
       return;
     }
 
-    if (!state.locked && KEY_TO_INDEX[key] !== undefined) {
+    if (!els.quizView.hidden && !state.locked && KEY_TO_INDEX[key] !== undefined) {
       e.preventDefault();
       choose(KEY_TO_INDEX[key]);
     }

@@ -25,7 +25,7 @@
   --safe-l: env(safe-area-inset-left, 0px);
 
   --q-size: clamp(1.35rem, 1.2vw + 1.1rem, 2.5rem);   /* ~34–40px at 1920 */
-  --a-size: clamp(1.05rem, 0.55vw + 0.95rem, 1.625rem);  /* ~22–26px at 1920 */
+  --a-size: clamp(1.2rem, 0.65vw + 1.1rem, 1.9375rem);  /* ~30–31px at 1920, +15–20% */
   --ui-size: clamp(0.85rem, 0.45vw + 0.75rem, 1.15rem);
   --pad: clamp(0.75rem, 1.6vw, 2.25rem);
 }
@@ -376,7 +376,7 @@ main {
   flex-direction: column;
   flex: 0 0 auto;
   width: 100%;
-  max-width: 1080px;
+  max-width: 1480px;
   margin: 0 auto;
   gap: 1rem;
   padding: 1.35rem 1.5rem 1.4rem;
@@ -611,8 +611,7 @@ main {
 }
 
 @media (max-height: 800px) and (min-width: 801px) {
-  .question { font-size: clamp(1.4rem, 3.4vh, 2.6rem); }
-  .answer { font-size: clamp(1.05rem, 2.6vh, 1.85rem); }
+  .answer { font-size: clamp(1.15rem, 2.6vh, 1.9rem); }
 }
 
 /* Reduce motion */
@@ -620,25 +619,66 @@ main {
   .waves, .explain, .bar-fill, .btn, .answer { animation: none; transition: none; }
 }
 
-/* ----- Comic screen (same card as quiz) ----- */
+/* ----- Comic screen: image fills nearly the full viewport height ----- */
+body.showing-comic .kbd-hint { display: none; }
+body.showing-comic main {
+  padding-top: 0.15rem;
+  padding-bottom: 0.15rem;
+}
+
+.comic-view {
+  position: relative;
+  gap: 0.25rem;
+  padding: 0.2rem 0.3rem 0.25rem;
+  max-width: min(1500px, 98vw);
+}
+
+.comic-view .q-meta {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.45rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.comic-view .chip {
+  padding: 0.16rem 0.55rem;
+  font-size: 0.8em;
+}
+
 .comic-frame {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 0;
+  flex: 0 1 auto;
 }
 
 .comic-art {
   display: block;
-  max-width: 100%;
   width: auto;
-  height: auto;
-  max-height: calc(100dvh - 16rem);
+  max-width: 100%;
+  height: calc(100dvh - 6.6rem);
+  max-height: calc(100dvh - 6.6rem);
   object-fit: contain;
-  border-radius: 0.6rem;
+  margin: 0 auto;
+  border-radius: 0.45rem;
 }
 
 .comic-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.comic-actions .btn {
+  font-size: 0.95rem;
+  min-height: 2.2rem;
+  padding: 0.35rem 1rem;
+}
+
+.quiz-nav {
+  display: flex;
+  justify-content: flex-start;
 }
