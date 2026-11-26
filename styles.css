@@ -370,7 +370,8 @@ main {
 }
 
 /* ----- Quiz layout ----- */
-.quiz-view {
+.quiz-view,
+.comic-view {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
@@ -601,7 +602,8 @@ main {
     flex-direction: column;
   }
   .explain .btn { width: 100%; }
-  .quiz-view {
+  .quiz-view,
+  .comic-view {
     display: flex;
     overflow: auto;
   }
@@ -616,4 +618,27 @@ main {
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   .waves, .explain, .bar-fill, .btn, .answer { animation: none; transition: none; }
+}
+
+/* ----- Comic screen (same card as quiz) ----- */
+.comic-frame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+}
+
+.comic-art {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: calc(100dvh - 16rem);
+  object-fit: contain;
+  border-radius: 0.6rem;
+}
+
+.comic-actions {
+  display: flex;
+  justify-content: center;
 }

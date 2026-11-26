@@ -10,8 +10,16 @@
     d: 3, D: 3, g: 3, G: 3, г: 3, Г: 3
   };
 
+  const SCENES = [
+    { scene: 1, sceneLabel: "Сцена 1", webp: "images/scena-1.webp", jpg: "images/scena-1.jpg" },
+    { scene: 2, sceneLabel: "Сцена 2", webp: "images/scena-2.webp", jpg: "images/scena-2.jpg" },
+    { scene: 3, sceneLabel: "Сцена 3", webp: "images/scena-3.webp", jpg: "images/scena-3.jpg" },
+    { scene: 4, sceneLabel: "Сцена 4", webp: "images/scena-4.webp", jpg: "images/scena-4.jpg" }
+  ];
+
   const els = {
     startView: document.getElementById("start-view"),
+    comicView: document.getElementById("comic-view"),
     quizView: document.getElementById("quiz-view"),
     endView: document.getElementById("end-view"),
     hud: document.getElementById("hud"),
@@ -33,7 +41,11 @@
     endCorrect: document.getElementById("end-correct"),
     endTotal: document.getElementById("end-total"),
     endMessage: document.getElementById("end-message"),
-    endEyebrow: document.getElementById("end-eyebrow")
+    endEyebrow: document.getElementById("end-eyebrow"),
+    comicChip: document.getElementById("comic-chip"),
+    comicSource: document.getElementById("comic-source"),
+    comicImg: document.getElementById("comic-img"),
+    toQuestionsBtn: document.getElementById("to-questions-btn")
   };
 
   const state = {
@@ -57,9 +69,10 @@
 
   function show(view) {
     els.startView.hidden = view !== "start";
+    els.comicView.hidden = view !== "comic";
     els.quizView.hidden = view !== "quiz";
     els.endView.hidden = view !== "end";
-    els.hud.hidden = view !== "quiz";
+    els.hud.hidden = view !== "quiz" && view !== "comic";
   }
 
   function start(queue, mode) {
@@ -70,12 +83,44 @@
     state.missed = [];
     state.mode = mode;
     els.scoreValue.textContent = "0";
-    show("quiz");
-    renderQuestion();
+    if (mode === "all" && state.queue.length) {
+      showComic(state.queue[0].scene);
+    } else {
+      show("quiz");
+      renderQuestion();
+    }
   }
 
   function currentQuestion() {
     return state.queue[state.index];
+  }
+
+  function updateProgress(beforeAnswer) {
+    const total = state.queue.length;
+    els.progressLabel.textContent = (state.index + 1) + " / " + total;
+    const done = beforeAnswer ? state.index : state.index + 1;
+    els.barFill.style.width = ((done / total) * 100) + "%";
+  }
+
+  function showComic(sceneNum) {
+    const scene = SCENES.find((s) => s.scene === sceneNum);
+    if (!scene) {
+      show("quiz");
+      renderQuestion();
+      return;
+    }
+    els.comicChip.textContent = scene.sceneLabel;
+    els.comicSource.srcset = scene.webp;
+    els.comicImg.src = scene.jpg;
+    els.comicImg.alt = scene.sceneLabel;
+    updateProgress(true);
+    show("comic");
+    els.toQuestionsBtn.focus();
+  }
+
+  function goToQuestions() {
+    show("quiz");
+    renderQuestion();
   }
 
   function renderQuestion() {
@@ -87,9 +132,7 @@
     els.examChip.textContent = "Въпрос " + q.examNumber;
     els.questionText.textContent = q.text;
 
-    const total = state.queue.length;
-    els.progressLabel.textContent = (state.index + 1) + " / " + total;
-    els.barFill.style.width = ((state.index / total) * 100) + "%";
+    updateProgress(true);
 
     els.explain.hidden = true;
     els.explain.classList.remove("is-yes", "is-no");
@@ -152,15 +195,22 @@
 
     els.explainText.textContent = q.explanation;
     els.explain.hidden = false;
-    els.barFill.style.width = (((state.index + 1) / state.queue.length) * 100) + "%";
+    updateProgress(false);
     els.nextBtn.focus();
   }
 
   function next() {
     if (!state.locked) return;
     if (state.index < state.queue.length - 1) {
+      const current = currentQuestion();
       state.index += 1;
-      renderQuestion();
+      const upcoming = currentQuestion();
+      if (state.mode === "all" && upcoming.scene !== current.scene) {
+        showComic(upcoming.scene);
+      } else {
+        show("quiz");
+        renderQuestion();
+      }
     } else {
       showEnd();
     }
@@ -200,6 +250,7 @@
 
   els.startBtn.addEventListener("click", () => start(QUESTIONS, "all"));
   els.nextBtn.addEventListener("click", next);
+  els.toQuestionsBtn.addEventListener("click", goToQuestions);
   els.restartBtn.addEventListener("click", () => start(QUESTIONS, "all"));
   els.retryWrongBtn.addEventListener("click", () => {
     if (!state.missed.length) return;
@@ -229,6 +280,12 @@
         if (state.missed.length) start(state.missed, "retry");
         else start(QUESTIONS, "all");
       }
+      return;
+    }
+
+    if (!els.comicView.hidden && (key === "Enter" || key === " " || key === "ArrowRight")) {
+      e.preventDefault();
+      goToQuestions();
       return;
     }
 
